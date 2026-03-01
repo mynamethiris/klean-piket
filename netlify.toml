@@ -5,7 +5,8 @@
 
 [functions]
   node_bundler = "esbuild"
-  included_files = ["netlify/functions/**"]
+  # Jangan bundle libsql — biarkan sebagai external module
+  external_node_modules = ["@libsql/client", "@libsql/client/http", "@libsql/linux-x64-gnu", "@libsql/darwin-arm64"]
 
 [[redirects]]
   from = "/api/*"
