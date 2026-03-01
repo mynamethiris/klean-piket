@@ -6,7 +6,8 @@ import {
   UserPlus, Trash2, RotateCcw, X, Search, Plus,
   Edit2, ChevronDown, Calendar, ShieldCheck, RefreshCw, ArrowRight, Settings,
   CheckCircle, AlertTriangle, Info, Eye, EyeOff, Copy, FolderOpen, Folder,
-  History, Image as ImageIcon, Maximize2, Key, FlaskConical
+  History, Image as ImageIcon, Maximize2, Key, FlaskConical,
+  Shuffle, BookOpen, ClipboardPaste, UserX
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { SCHOOL_LAT, SCHOOL_LON, MAX_DISTANCE_METERS, getDistance, getCurrentWIBTime, getStatus } from './constants';
@@ -75,22 +76,23 @@ const CustomDropdown = ({ options, value, onChange, placeholder = "Pilih...", cl
   const [isOpen, setIsOpen] = useState(false);
   const selected = options.find(o => o.id.toString() === value?.toString());
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative ${className}`} style={{ isolation: 'isolate' }}>
       <button type="button" disabled={disabled}
         onClick={() => setIsOpen(!isOpen)}
         className={`w-full flex items-center justify-between px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-sm font-medium text-slate-700 hover:border-slate-300 transition-all disabled:opacity-50 disabled:cursor-not-allowed ${isOpen ? 'ring-2 ring-emerald-500/20 border-emerald-500 bg-white' : ''}`}
       >
         <span className={selected ? 'text-slate-900 font-semibold' : 'text-slate-400'}>{selected ? selected.label : placeholder}</span>
-        <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+        <ChevronDown size={16} className={`text-slate-400 transition-transform duration-200 flex-shrink-0 ${isOpen ? 'rotate-180' : ''}`} />
       </button>
       <AnimatePresence>
         {isOpen && (
           <>
-            <div className="fixed inset-0 z-30" onClick={() => setIsOpen(false)} />
+            <div className="fixed inset-0 z-[60]" onClick={() => setIsOpen(false)} />
             <motion.div
-              initial={{ opacity: 0, y: -4, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4, scale: 0.95 }}
-              transition={{ duration: 0.15 }}
-              className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 z-40 max-h-60 overflow-y-auto py-2"
+              initial={{ opacity: 0, y: -4, scale: 0.97 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -4, scale: 0.97 }}
+              transition={{ duration: 0.12 }}
+              className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-100 z-[70] max-h-56 overflow-y-auto py-1.5"
+              style={{ overscrollBehavior: 'contain' }}
             >
               {options.map(opt => (
                 <button key={opt.id} type="button"
@@ -135,6 +137,557 @@ const ConfirmDialog = ({ isOpen, onClose, onConfirm, title, message, confirmText
             className="flex-1 py-4 bg-red-600 text-white font-bold rounded-2xl hover:bg-red-700 transition-all shadow-lg shadow-red-200 active:scale-[0.98] disabled:opacity-50"
           >{confirmText}</button>
         </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// --- ABOUT MODAL ---
+// LWA Easter Egg: floating stars
+const StarBurst = ({ count = 12 }: { count?: number }) => (
+  <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-[2.5rem]">
+    {Array.from({ length: count }).map((_, i) => {
+      const size = 6 + Math.random() * 10;
+      const top = Math.random() * 100;
+      const left = Math.random() * 100;
+      const delay = i * 0.3;
+      const dur = 2 + Math.random() * 3;
+      return (
+        <motion.div key={i}
+          style={{ top: `${top}%`, left: `${left}%`, width: size, height: size, position: 'absolute' }}
+          animate={{ scale: [0.6, 1.3, 0.6], opacity: [0.3, 0.9, 0.3], rotate: [0, 180, 360] }}
+          transition={{ duration: dur, delay, repeat: Infinity, ease: 'easeInOut' }}>
+          <svg viewBox="0 0 24 24" fill="currentColor" className="text-yellow-300 w-full h-full drop-shadow-md">
+            <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
+          </svg>
+        </motion.div>
+      );
+    })}
+  </div>
+);
+
+// --- LWA EASTER EGG: floating star particles ---
+const StarParticle = ({ index }: { index: number }) => {
+  const sizes = [8, 10, 6, 12, 7, 9, 11, 6, 8, 10, 7, 9, 12, 8, 6, 10];
+  const sz = sizes[index % sizes.length];
+  const leftPct = (index * 6.25) % 100;
+  const topPct = ((index * 11.7) + (index % 3) * 17) % 100;
+  const duration = 2.5 + (index % 4) * 0.8;
+  const delay = index * 0.2;
+  return (
+    <motion.div
+      className="absolute pointer-events-none"
+      style={{ left: `${leftPct}%`, top: `${topPct}%`, width: sz, height: sz }}
+      animate={{ scale: [0.5, 1.4, 0.5], opacity: [0.2, 1, 0.2], rotate: [0, 180, 360] }}
+      transition={{ duration, delay, repeat: Infinity, ease: 'easeInOut' }}>
+      <svg viewBox="0 0 24 24" fill="currentColor" className="w-full h-full" style={{ color: `hsl(${45 + index * 8}, 100%, ${70 + (index % 3) * 10}%)` }}>
+        <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
+      </svg>
+    </motion.div>
+  );
+};
+
+const AboutModal = ({ onClose }: { onClose: () => void }) => (
+  <div className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-5"
+    style={{ background: 'radial-gradient(ellipse 80% 80% at 50% 50%, rgba(100,10,30,0.95) 0%, rgba(15,5,30,0.98) 100%)' }}>
+
+    {/* Ambient glow orbs */}
+    <div className="absolute inset-0 pointer-events-none overflow-hidden">
+      <motion.div className="absolute rounded-full"
+        style={{ width: 400, height: 400, top: '-10%', left: '-10%', background: 'radial-gradient(circle, rgba(185,28,28,0.4) 0%, transparent 65%)' }}
+        animate={{ scale: [1, 1.25, 1], opacity: [0.6, 1, 0.6] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }} />
+      <motion.div className="absolute rounded-full"
+        style={{ width: 350, height: 350, bottom: '-5%', right: '-5%', background: 'radial-gradient(circle, rgba(120,40,200,0.35) 0%, transparent 65%)' }}
+        animate={{ scale: [1.2, 0.85, 1.2], opacity: [0.5, 0.9, 0.5] }}
+        transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut', delay: 2 }} />
+    </div>
+
+    {/* Modal card */}
+    <motion.div
+      initial={{ opacity: 0, scale: 0.88, y: 24 }}
+      animate={{ opacity: 1, scale: 1, y: 0 }}
+      transition={{ type: 'spring', damping: 20, stiffness: 220 }}
+      className="relative w-full sm:max-w-sm rounded-[2rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl flex flex-col"
+      style={{
+        background: 'linear-gradient(160deg, #1e0628 0%, #2a0838 45%, #160420 100%)',
+        border: '1px solid rgba(220,38,38,0.45)',
+        maxHeight: '90dvh',
+      }}>
+
+      {/* Star particles layer */}
+      <div className="absolute inset-0 pointer-events-none">
+        {Array.from({ length: 16 }).map((_, i) => <StarParticle key={i} index={i} />)}
+      </div>
+
+      {/* Top banner */}
+      <div className="relative flex-shrink-0 pt-7 pb-5 px-5 text-center"
+        style={{ background: 'linear-gradient(180deg, rgba(190,30,30,0.55) 0%, transparent 100%)' }}>
+        <button onClick={onClose}
+          className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-90"
+          style={{ background: 'rgba(220,38,38,0.3)', border: '1px solid rgba(255,100,100,0.4)', color: '#fca5a5' }}>
+          <X size={15} />
+        </button>
+        <motion.div
+          animate={{ y: [0, -5, 0], rotate: [0, 6, -6, 0] }}
+          transition={{ duration: 3.5, repeat: Infinity, ease: 'easeInOut' }}
+          className="text-4xl sm:text-5xl mb-2.5 select-none leading-none">✨</motion.div>
+        <motion.h2
+          animate={{ textShadow: ['0 0 16px rgba(251,191,36,0.6)', '0 0 32px rgba(245,158,11,0.9)', '0 0 16px rgba(251,191,36,0.6)'] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="text-xl sm:text-2xl font-black tracking-wider leading-none"
+          style={{ color: '#fbbf24', fontFamily: '"Georgia", "Times New Roman", serif' }}>
+          KLEAN
+        </motion.h2>
+        <p className="mt-1.5 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: 'rgba(252,211,77,0.65)' }}>
+          ~ Sistem Piket Kelas · X TKJT 1 ~
+        </p>
+      </div>
+
+      {/* Scrollable content — hidden scrollbar */}
+      <div className="relative flex-1 px-4 pb-5 space-y-2.5 overflow-y-auto"
+        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+
+        {/* App identity card */}
+        <div className="rounded-2xl p-3.5"
+          style={{ background: 'rgba(185,28,28,0.22)', border: '1px solid rgba(220,38,38,0.3)' }}>
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] mb-1.5" style={{ color: '#fbbf24' }}>✦ Nama Aplikasi</p>
+          <p className="font-black text-white text-sm leading-snug">Klean — Manajemen Piket Kelas</p>
+          <div className="flex gap-2 mt-2 flex-wrap">
+            {['SMK Negeri', 'X TKJT 1', '2024/2025'].map(badge => (
+              <span key={badge} className="text-[9px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: 'rgba(185,28,28,0.35)', border: '1px solid rgba(220,38,38,0.35)', color: 'rgba(255,200,200,0.85)' }}>
+                {badge}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Tech stack */}
+        <div className="rounded-2xl p-3.5"
+          style={{ background: 'rgba(109,40,217,0.2)', border: '1px solid rgba(139,92,246,0.3)' }}>
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] mb-2" style={{ color: '#c4b5fd' }}>✦ Teknologi</p>
+          <div className="flex flex-wrap gap-1.5">
+            {['React + TypeScript', 'Vite', 'Tailwind CSS', 'Express.js', 'SQLite', 'Framer Motion'].map(t => (
+              <span key={t} className="px-2 py-0.5 rounded-full text-[9px] font-bold"
+                style={{ background: 'rgba(139,92,246,0.22)', border: '1px solid rgba(167,139,250,0.38)', color: '#ddd6fe' }}>
+                {t}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Features grid */}
+        <div className="rounded-2xl p-3.5"
+          style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(185,28,28,0.22)' }}>
+          <p className="text-[9px] font-black uppercase tracking-[0.18em] mb-2.5" style={{ color: '#fbbf24' }}>✦ Fitur Utama</p>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-1.5">
+            {[
+              ['⚡', 'Absensi + Geofencing'],
+              ['📸', 'Laporan + Foto'],
+              ['👥', 'Manajemen Anggota'],
+              ['📅', 'Jadwal Otomatis'],
+              ['🎲', 'Auto-Shuffle'],
+              ['📋', 'Import Jadwal'],
+            ].map(([icon, text]) => (
+              <div key={text} className="flex items-center gap-1.5">
+                <span className="text-sm leading-none flex-shrink-0">{icon}</span>
+                <span className="text-[10px] font-medium" style={{ color: 'rgba(255,255,255,0.8)' }}>{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Quote */}
+        <div className="rounded-2xl p-3 text-center"
+          style={{ background: 'rgba(185,28,28,0.12)', border: '1px dashed rgba(251,191,36,0.28)' }}>
+          <p className="text-[10px] italic font-medium leading-relaxed" style={{ color: 'rgba(252,211,77,0.82)' }}>
+            "A believing heart is your magic."
+          </p>
+          <p className="text-[9px] mt-1 font-bold" style={{ color: 'rgba(252,211,77,0.38)' }}>
+            — Shiny Chariot · Little Witch Academia
+          </p>
+        </div>
+
+        <p className="text-center text-[9px] font-medium" style={{ color: 'rgba(255,255,255,0.22)' }}>
+          &copy; 2025 Sistem Piket Kelas X TKJT 1
+        </p>
+      </div>
+    </motion.div>
+  </div>
+);
+
+
+// --- SHUFFLE MODAL ---
+const ShuffleModal = ({ onClose, onDone }: { onClose: () => void; onDone: () => void }) => {
+  const [numGroups, setNumGroups] = useState(5);
+  const [loading, setLoading] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const handleShuffle = async () => {
+    setLoading(true);
+    try {
+      await safeFetch("/api/shuffle-members", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ numGroups }) });
+      setDone(true);
+      confetti({ particleCount: 140, spread: 90, origin: { y: 0.6 } });
+      setTimeout(() => { onDone(); onClose(); }, 1800);
+    } catch (err: any) {
+      alert(err.message || "Gagal melakukan acak");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 80 }} animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 80 }}
+        transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+        className="bg-white w-full sm:max-w-sm rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden">
+
+        {/* Mobile drag handle */}
+        <div className="flex justify-center pt-3 sm:hidden">
+          <div className="w-9 h-1 bg-slate-200 rounded-full" />
+        </div>
+
+        <AnimatePresence mode="wait">
+          {done ? (
+            <motion.div key="done"
+              initial={{ opacity: 0, scale: 0.92 }} animate={{ opacity: 1, scale: 1 }}
+              className="flex flex-col items-center justify-center py-12 px-6 gap-4 text-center">
+              <motion.div
+                animate={{ scale: [1, 1.15, 1], rotate: [0, -8, 8, 0] }}
+                transition={{ duration: 0.7, ease: 'easeOut' }}
+                className="w-16 h-16 bg-emerald-100 rounded-3xl flex items-center justify-center">
+                <CheckCircle size={32} className="text-emerald-600" />
+              </motion.div>
+              <div>
+                <p className="text-lg font-black text-slate-900">Berhasil Diacak! 🎉</p>
+                <p className="text-sm text-slate-500 font-medium mt-1">Anggota & jadwal didistribusi ulang secara merata.</p>
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div key="form" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="px-5 py-5 sm:px-6 sm:py-6 space-y-5">
+              {/* Header */}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+                    style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}>
+                    <Shuffle size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900">Acak Anggota</h3>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Distribusi otomatis merata</p>
+                  </div>
+                </div>
+                <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"><X size={18} /></button>
+              </div>
+
+              {/* Warning */}
+              <div className="flex items-start gap-2.5 p-3.5 bg-amber-50 border border-amber-200 rounded-2xl">
+                <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
+                <p className="text-amber-800 text-xs font-medium leading-relaxed">
+                  Semua data <strong>PJ, kelompok, dan jadwal lama akan dihapus</strong> dan diganti baru secara acak.
+                </p>
+              </div>
+
+              {/* Group count stepper */}
+              <div>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center mb-3">Jumlah Kelompok</p>
+                <div className="flex items-center justify-center gap-4">
+                  <button type="button" onClick={() => setNumGroups(n => Math.max(2, n - 1))}
+                    className="w-12 h-12 bg-slate-100 hover:bg-slate-200 active:scale-90 rounded-2xl font-black text-2xl text-slate-700 flex items-center justify-center transition-all">
+                    −
+                  </button>
+                  <div className="text-center w-16">
+                    <motion.span
+                      key={numGroups}
+                      initial={{ scale: 1.3, opacity: 0.5 }} animate={{ scale: 1, opacity: 1 }}
+                      className="text-5xl font-black text-slate-900 block tabular-nums">{numGroups}</motion.span>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">kelompok</p>
+                  </div>
+                  <button type="button" onClick={() => setNumGroups(n => Math.min(10, n + 1))}
+                    className="w-12 h-12 bg-slate-100 hover:bg-slate-200 active:scale-90 rounded-2xl font-black text-2xl text-slate-700 flex items-center justify-center transition-all">
+                    +
+                  </button>
+                </div>
+                <p className="text-[10px] text-slate-400 font-medium text-center mt-2">Selisih maks 1 anggota per kelompok</p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2.5 pt-1">
+                <button onClick={onClose}
+                  className="flex-1 py-3.5 bg-slate-100 text-slate-600 font-bold text-sm rounded-2xl hover:bg-slate-200 active:scale-[0.97] transition-all">
+                  Batal
+                </button>
+                <button onClick={handleShuffle} disabled={loading || numGroups < 2}
+                  className="flex-1 py-3.5 font-bold text-sm rounded-2xl text-white flex items-center justify-center gap-2 active:scale-[0.97] transition-all disabled:opacity-50"
+                  style={{ background: 'linear-gradient(135deg, #7c3aed, #a855f7)', boxShadow: '0 4px 14px rgba(124,58,237,0.35)' }}>
+                  {loading
+                    ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <><Shuffle size={16} />Acak Sekarang</>}
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  );
+};
+
+// --- SCHEDULE COPY/PASTE MODAL ---
+const ScheduleCopyPaste = ({ schedules, users, onClose, onImported }: { schedules: any[]; users: any[]; onClose: () => void; onImported: () => void }) => {
+  const [mode, setMode] = useState<"copy" | "paste">("copy");
+  const [pasteText, setPasteText] = useState("");
+  const [copied, setCopied] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [newAccounts, setNewAccounts] = useState<{ name: string; code: string }[]>([]);
+
+  const buildCopyText = () => {
+    const lines: string[] = [];
+    for (const day of DAYS_ORDER) {
+      const sched = schedules.find(s => s.day === day);
+      if (!sched) continue;
+      lines.push(day);
+      const pjUser = users.find((u: any) => u.role === "pj" && u.group_name === sched.group_name);
+      lines.push(`• ${pjUser ? pjUser.name : sched.group_name} (PJ)`);
+      lines.push("");
+    }
+    return lines.join("\n").trim();
+  };
+  const copyText = buildCopyText();
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(copyText);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleImport = async () => {
+    if (!pasteText.trim()) return;
+    setImporting(true);
+    try {
+      const res = await safeFetch("/api/schedules/import-text", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: pasteText })
+      });
+      onImported();
+      if (res.newAccounts && res.newAccounts.length > 0) {
+        setNewAccounts(res.newAccounts);
+      } else {
+        onClose();
+      }
+    } catch (err: any) {
+      alert(err.message || "Gagal mengimpor jadwal");
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  // Show new accounts result screen
+  if (newAccounts.length > 0) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+        <motion.div
+          initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+          className="bg-white w-full sm:max-w-md rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden">
+          <div className="flex justify-center pt-3 sm:hidden"><div className="w-9 h-1 bg-slate-200 rounded-full" /></div>
+          <div className="px-5 py-5 sm:px-6 sm:py-6 space-y-4">
+            <div className="flex items-center gap-3 p-4 bg-emerald-50 border border-emerald-200 rounded-2xl">
+              <div className="w-9 h-9 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <CheckCircle size={20} className="text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-emerald-900">Jadwal Berhasil Diimpor!</p>
+                <p className="text-xs text-emerald-700 font-medium">{newAccounts.length} akun PJ baru otomatis dibuat</p>
+              </div>
+            </div>
+            <div className="space-y-2 max-h-56 overflow-y-auto" style={{ scrollbarWidth: 'thin' }}>
+              {newAccounts.map(a => (
+                <div key={a.code} className="flex items-center justify-between p-3 bg-blue-50 rounded-xl border border-blue-100">
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{a.name}</p>
+                    <p className="text-[9px] text-blue-500 font-bold uppercase tracking-widest">Kode Login PJ</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-base font-black text-blue-700 tracking-[0.15em]">{a.code}</span>
+                    <button onClick={() => navigator.clipboard.writeText(a.code)}
+                      className="p-1.5 text-blue-400 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition-all">
+                      <Copy size={13} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="text-[10px] text-slate-400 font-medium text-center">Simpan kode-kode ini. PJ menggunakannya untuk login.</p>
+            <button onClick={onClose}
+              className="w-full py-3.5 bg-emerald-600 text-white font-bold rounded-2xl hover:bg-emerald-700 active:scale-[0.97] transition-all">
+              Selesai
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-slate-900/60 backdrop-blur-sm">
+      <motion.div
+        initial={{ opacity: 0, y: 60 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', damping: 24, stiffness: 280 }}
+        className="bg-white w-full sm:max-w-lg rounded-t-[2rem] sm:rounded-[2rem] shadow-2xl overflow-hidden"
+        style={{ maxHeight: '92dvh' }}>
+
+        <div className="flex justify-center pt-3 sm:hidden"><div className="w-9 h-1 bg-slate-200 rounded-full" /></div>
+        <div className="px-5 py-5 sm:px-6 sm:py-6 space-y-4 overflow-y-auto" style={{ maxHeight: 'calc(92dvh - 1.5rem)', scrollbarWidth: 'none' }}>
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-black text-slate-900">Salin / Tempel Jadwal</h3>
+            <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"><X size={18} /></button>
+          </div>
+
+          {/* Tab switcher */}
+          <div className="flex bg-slate-100 p-1 rounded-2xl gap-1">
+            {[
+              { id: 'copy' as const, label: 'Salin Jadwal', icon: <Copy size={14} /> },
+              { id: 'paste' as const, label: 'Tempel & Import', icon: <ClipboardPaste size={14} /> },
+            ].map(tab => (
+              <button key={tab.id} onClick={() => setMode(tab.id)}
+                className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5
+                  ${mode === tab.id ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                {tab.icon}{tab.label}
+              </button>
+            ))}
+          </div>
+
+          <AnimatePresence mode="wait">
+            {mode === "copy" ? (
+              <motion.div key="copy" initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 12 }}
+                transition={{ duration: 0.18 }} className="space-y-3">
+                <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 font-mono text-xs whitespace-pre-wrap text-slate-700 max-h-40 overflow-y-auto leading-relaxed"
+                  style={{ scrollbarWidth: 'thin' }}>
+                  {copyText || <span className="text-slate-400 italic">Belum ada jadwal tersimpan.</span>}
+                </div>
+                <button onClick={handleCopy} disabled={!copyText}
+                  className="w-full py-3.5 bg-slate-900 text-white font-bold text-sm rounded-2xl hover:bg-slate-800 active:scale-[0.97] transition-all flex items-center justify-center gap-2 disabled:opacity-40">
+                  {copied ? <><CheckCircle size={16} />Tersalin ke Clipboard!</> : <><Copy size={16} />Salin Jadwal</>}
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div key="paste" initial={{ opacity: 0, x: 12 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -12 }}
+                transition={{ duration: 0.18 }} className="space-y-3">
+                <div className="flex items-start gap-2 p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                  <Info size={13} className="text-blue-500 flex-shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-blue-700 font-medium leading-relaxed">
+                    Akun PJ & data anggota akan <strong>otomatis dibuat</strong> dari teks. Format: nama hari → <code>• Nama (PJ)</code> → <code>• Anggota</code>
+                  </p>
+                </div>
+                <textarea value={pasteText} onChange={e => setPasteText(e.target.value)}
+                  className="w-full h-28 p-3.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-mono text-slate-700 outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-400 transition-all resize-none leading-relaxed"
+                  placeholder="Senin&#10;• Ahmad (PJ)&#10;• Budi&#10;&#10;Selasa&#10;• Citra (PJ)" />
+                <button onClick={handleImport} disabled={!pasteText.trim() || importing}
+                  className="w-full py-3.5 font-bold text-sm rounded-2xl text-white flex items-center justify-center gap-2 active:scale-[0.97] transition-all disabled:opacity-40"
+                  style={{ background: importing ? '#6b7280' : 'linear-gradient(135deg, #059669, #10b981)', boxShadow: importing ? 'none' : '0 4px 14px rgba(5,150,105,0.3)' }}>
+                  {importing
+                    ? <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Mengimpor...</>
+                    : <><ClipboardPaste size={16} />Import & Buat Akun Otomatis</>}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+// --- ABSENT MANAGEMENT MODAL ---
+const AbsentManagementModal = ({ members, onClose }: { members: any[]; onClose: () => void }) => {
+  const [selectedDay, setSelectedDay] = useState(DAYS_ORDER[0]);
+  const [search, setSearch] = useState("");
+  const [absentList, setAbsentList] = useState<{ id: number; name: string; reason: string }[]>([]);
+  const [showSearch, setShowSearch] = useState(false);
+
+  const allMembers = members.filter(m => !m.is_pj_group);
+  const filtered = allMembers.filter(m => m.name.toLowerCase().includes(search.toLowerCase()) && !absentList.find(a => a.id === m.id));
+
+  const addAbsent = (m: any) => {
+    setAbsentList(prev => [...prev, { id: m.id, name: m.name, reason: "Tidak Masuk" }]);
+    setSearch("");
+    setShowSearch(false);
+  };
+  const removeAbsent = (id: number) => setAbsentList(prev => prev.filter(a => a.id !== id));
+  const updateReason = (id: number, reason: string) => setAbsentList(prev => prev.map(a => a.id === id ? { ...a, reason } : a));
+
+  const copyAbsentText = () => {
+    const lines = [`Daftar Ketidakhadiran - ${selectedDay}`, ""];
+    absentList.forEach(a => lines.push(`• ${a.name} — ${a.reason}`));
+    navigator.clipboard.writeText(lines.join("\n"));
+    alert("Disalin ke clipboard!");
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
+      <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }}
+        className="bg-white rounded-[2.5rem] w-full max-w-lg p-8 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-red-100 text-red-600 rounded-2xl flex items-center justify-center"><UserX size={20} /></div>
+            <h3 className="text-xl font-bold text-slate-900">Anggota Tidak Masuk</h3>
+          </div>
+          <button onClick={onClose} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"><X size={20} /></button>
+        </div>
+        <div className="flex gap-2 mb-6 flex-wrap">
+          {DAYS_ORDER.map(d => (
+            <button key={d} onClick={() => { setSelectedDay(d); setAbsentList([]); }}
+              className={`px-4 py-2 rounded-xl text-sm font-bold transition-all ${selectedDay === d ? "bg-slate-900 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200"}`}>
+              {d}
+            </button>
+          ))}
+        </div>
+        <div className="relative mb-4">
+          <div className="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-2xl border border-slate-200 focus-within:ring-4 focus-within:ring-red-500/10 focus-within:border-red-400 transition-all">
+            <Search size={18} className="text-slate-400 flex-shrink-0" />
+            <input type="text" placeholder="Cari nama anggota untuk ditambahkan..." className="flex-1 bg-transparent outline-none text-sm font-medium"
+              value={search} onChange={e => { setSearch(e.target.value); setShowSearch(true); }} onFocus={() => setShowSearch(true)} />
+          </div>
+          {showSearch && search.length > 0 && (
+            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 z-30 max-h-48 overflow-y-auto py-2">
+              {filtered.length === 0 && <p className="px-4 py-3 text-sm text-slate-400 font-medium italic">Tidak ditemukan</p>}
+              {filtered.map(m => (
+                <button key={m.id} onClick={() => addAbsent(m)} className="w-full text-left px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">{m.name}</button>
+              ))}
+            </div>
+          )}
+        </div>
+        <div className="space-y-3 mb-6">
+          {absentList.length === 0 ? (
+            <div className="py-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-200">
+              <UserX size={32} className="text-slate-300 mx-auto mb-2" />
+              <p className="text-sm text-slate-400 font-medium italic">Cari dan tambahkan anggota yang tidak masuk</p>
+            </div>
+          ) : (
+            absentList.map(a => (
+              <div key={a.id} className="flex items-center gap-3 p-4 bg-red-50 rounded-2xl border border-red-100">
+                <div className="w-8 h-8 bg-red-100 rounded-xl flex items-center justify-center text-red-600 font-bold text-sm flex-shrink-0">{a.name.charAt(0)}</div>
+                <span className="text-sm font-bold text-red-900 flex-1">{a.name}</span>
+                <select value={a.reason} onChange={e => updateReason(a.id, e.target.value)}
+                  className="text-xs font-bold text-red-700 bg-white border border-red-200 rounded-xl px-3 py-2 outline-none focus:ring-2 focus:ring-red-300">
+                  {Object.values(MEMBER_STATUSES).filter(s => s !== MEMBER_STATUSES.HADIR).map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <button onClick={() => removeAbsent(a.id)} className="p-1.5 text-red-400 hover:text-red-600 hover:bg-red-100 rounded-xl transition-all"><X size={16} /></button>
+              </div>
+            ))
+          )}
+        </div>
+        {absentList.length > 0 && (
+          <button onClick={copyAbsentText}
+            className="w-full py-4 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all flex items-center justify-center gap-3">
+            <Copy size={18} />Salin Daftar ({absentList.length} orang)
+          </button>
+        )}
       </motion.div>
     </div>
   );
@@ -396,7 +949,7 @@ const TestingPage = () => {
       </div>
 
       {/* PJ selector */}
-      <div className="bento-card p-6 space-y-4 bg-white">
+      <div className="bento-card p-6 space-y-4 bg-white" style={{ overflow: "visible" }}>
         <label className="text-xs font-bold text-slate-400 uppercase tracking-widest">Pilih PJ untuk Simulasi</label>
         <CustomDropdown
           options={[{ id: '', label: 'Pilih PJ...' }, ...users.map(u => ({ id: u.id, label: `${u.name} (${u.group_name})` }))]}
@@ -415,7 +968,7 @@ const TestingPage = () => {
       {testPjId && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Absensi Simulasi */}
-          <div className="bento-card p-6 bg-white space-y-5">
+          <div className="bento-card p-6 bg-white space-y-5" style={{ overflow: "visible" }}>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center"><MapPin size={18} /></div>
               <h3 className="font-bold text-slate-900">Simulasi Absensi Kehadiran</h3>
@@ -440,7 +993,7 @@ const TestingPage = () => {
           </div>
 
           {/* Laporan Simulasi */}
-          <div className="bento-card p-6 bg-white space-y-5">
+          <div className="bento-card p-6 bg-white space-y-5" style={{ overflow: "visible" }}>
             <div className="flex items-center gap-3">
               <div className="w-9 h-9 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center"><ClipboardList size={18} /></div>
               <h3 className="font-bold text-slate-900">Simulasi Laporan Kebersihan</h3>
@@ -493,7 +1046,7 @@ const TestingPage = () => {
                 <AnimatePresence>
                   {showSuggestions && searchTerm.length > 0 && (
                     <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 4 }}
-                      className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-xl border border-slate-100 z-30 max-h-40 overflow-y-auto py-1">
+                      className="absolute top-full left-0 right-0 mt-1 bg-white rounded-xl shadow-2xl border border-slate-100 z-[80] max-h-40 overflow-y-auto py-1">
                       {members.filter(m => m.name.toLowerCase().includes(searchTerm.toLowerCase()))
                         .filter(m => !selectedAbsentSchool.find(s => s.id === m.id))
                         .filter(m => !pjMembers.find(p => p.id === m.id))
@@ -550,7 +1103,9 @@ const PJDashboard = ({ user }: { user: User }) => {
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [editPhoto, setEditPhoto] = useState<File | null>(null);
+  const [editPhotoType, setEditPhotoType] = useState<'cleaning' | 'checkin'>('cleaning');
   const [editSubmitting, setEditSubmitting] = useState(false);
+  const [showAbsentMgmt, setShowAbsentMgmt] = useState(false);
 
   const isPastTimeLimit = useMemo(() => {
     if (settings.testing_mode === 'true') return false;
@@ -670,6 +1225,7 @@ const PJDashboard = ({ user }: { user: User }) => {
     setEditSubmitting(true);
     const formData = new FormData();
     formData.append('photo', editPhoto);
+    formData.append('photoType', editPhotoType);
     try {
       await safeFetch(`/api/report/${editingReport.id}/edit-photo`, { method: 'POST', body: formData });
       await fetchHistory();
@@ -694,6 +1250,7 @@ const PJDashboard = ({ user }: { user: User }) => {
   return (
     <div className="max-w-4xl mx-auto p-4 space-y-6">
       {previewImage && <ImagePreviewModal src={previewImage} onClose={() => setPreviewImage(null)} />}
+      {showAbsentMgmt && <AbsentManagementModal members={allMembers} onClose={() => setShowAbsentMgmt(false)} />}
 
       {/* Header */}
       <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -750,58 +1307,74 @@ const PJDashboard = ({ user }: { user: User }) => {
       <AnimatePresence mode="wait">
         {activeView === 'schedule' && (
           <motion.div key="schedule" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}>
-            <div className="bento-card p-6 sm:p-8 bg-white space-y-6">
-              <div className="flex items-center justify-between">
+            <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+              {/* Header row */}
+              <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Jadwal Piket Hari Ini</h3>
-                  <p className="text-sm text-slate-500 font-medium mt-1">{ALL_DAYS[new Date().getDay()]}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+                  <h3 className="text-base font-black text-slate-900">Jadwal Piket Minggu Ini</h3>
+                  <p className="text-xs text-slate-400 font-medium mt-0.5">
+                    {ALL_DAYS[new Date().getDay()]}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  </p>
                 </div>
-                <button onClick={() => setActiveView('dashboard')} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all"><X size={20} /></button>
+                <button onClick={() => setActiveView('dashboard')}
+                  className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-xl transition-all">
+                  <X size={18} />
+                </button>
               </div>
 
-              {/* Today highlight */}
-              <div className="p-6 bg-emerald-50 rounded-3xl border-2 border-emerald-200">
-                <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest mb-3">📌 Bertugas Hari Ini</p>
-                {schedules.filter(s => s.day === ALL_DAYS[new Date().getDay()]).length > 0 ? (
-                  <div className="space-y-3">
-                    {schedules.filter(s => s.day === ALL_DAYS[new Date().getDay()]).map(s => (
-                      <div key={s.id} className="flex items-center gap-3 p-4 bg-white rounded-2xl border border-emerald-100">
-                        <div className="w-3 h-3 bg-emerald-500 rounded-full flex-shrink-0" />
-                        <span className="text-base font-bold text-slate-900">{s.group_name}</span>
+              {/* Day columns — horizontal scroll on mobile, static 5-col on desktop */}
+              <div className="flex sm:grid sm:grid-cols-5 overflow-x-auto sm:overflow-x-visible border-b border-slate-100"
+                style={{ scrollbarWidth: 'none' }}>
+                {DAYS_ORDER.map(day => {
+                  const sched = schedules.find(s => s.day === day);
+                  const isToday = day === ALL_DAYS[new Date().getDay()];
+                  const isMyGroup = sched?.group_name === user.group_name;
+                  return (
+                    <div key={day}
+                      className={`flex-shrink-0 w-32 sm:w-auto flex flex-col items-center py-5 px-2 transition-colors border-r border-slate-100 last:border-r-0
+                        ${isToday ? 'bg-emerald-50' : isMyGroup ? 'bg-blue-50/50' : 'bg-white'}`}>
+                      <p className={`text-[9px] font-black uppercase tracking-widest mb-1.5
+                        ${isToday ? 'text-emerald-600' : isMyGroup ? 'text-blue-500' : 'text-slate-400'}`}>{day}</p>
+                      {isToday && (
+                        <span className="text-[8px] font-black bg-emerald-500 text-white px-1.5 py-0.5 rounded-full mb-2 leading-none">Hari Ini</span>
+                      )}
+                      {isMyGroup && !isToday && (
+                        <span className="text-[8px] font-black bg-blue-500 text-white px-1.5 py-0.5 rounded-full mb-2 leading-none">Anda</span>
+                      )}
+                      <p className={`text-xs font-bold text-center leading-snug
+                        ${!sched ? 'text-slate-300 italic' : isToday ? 'text-emerald-800' : isMyGroup ? 'text-blue-800' : 'text-slate-700'}`}>
+                        {sched?.group_name || '—'}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Today's group callout */}
+              {(() => {
+                const todaySched = schedules.find(s => s.day === ALL_DAYS[new Date().getDay()]);
+                return (
+                  <div className="px-4 py-3.5">
+                    {todaySched ? (
+                      <div className="flex items-center gap-3 p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200">
+                        <div className="w-8 h-8 bg-emerald-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                          <CheckCircle2 size={16} className="text-white" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest">Bertugas Hari Ini</p>
+                          <p className="text-sm font-black text-slate-900">{todaySched.group_name}</p>
+                        </div>
                       </div>
-                    ))}
+                    ) : (
+                      <p className="text-sm text-slate-400 font-medium italic text-center py-2">Tidak ada jadwal piket hari ini.</p>
+                    )}
                   </div>
-                ) : (
-                  <p className="text-slate-500 font-medium italic">Tidak ada jadwal piket hari ini.</p>
-                )}
-              </div>
-
-              {/* Full week schedule */}
-              <div>
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-4">Jadwal Minggu Ini</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-                  {DAYS_ORDER.map(day => {
-                    const sched = schedules.find(s => s.day === day);
-                    const isToday = day === ALL_DAYS[new Date().getDay()];
-                    const isMyGroup = sched?.group_name === user.group_name;
-                    return (
-                      <div key={day} className={`p-4 rounded-2xl border-2 text-center transition-all ${isToday ? 'bg-emerald-50 border-emerald-200' : isMyGroup ? 'bg-blue-50 border-blue-200' : 'bg-slate-50 border-slate-100'}`}>
-                        <p className={`text-[10px] font-bold uppercase tracking-widest mb-2 ${isToday ? 'text-emerald-600' : isMyGroup ? 'text-blue-600' : 'text-slate-400'}`}>{day}</p>
-                        {isToday && <span className="text-[9px] font-bold text-emerald-500 bg-emerald-100 px-2 py-0.5 rounded-full mb-2 inline-block">Hari Ini</span>}
-                        {isMyGroup && !isToday && <span className="text-[9px] font-bold text-blue-500 bg-blue-100 px-2 py-0.5 rounded-full mb-2 inline-block">Giliran Anda</span>}
-                        <p className={`text-sm font-bold ${sched ? (isToday ? 'text-emerald-900' : isMyGroup ? 'text-blue-900' : 'text-slate-700') : 'text-slate-300 italic'}`}>
-                          {sched?.group_name || 'Kosong'}
-                        </p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
+                );
+              })()}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
       {/* View: History */}
       <AnimatePresence mode="wait">
         {activeView === 'history' && (
@@ -869,26 +1442,45 @@ const PJDashboard = ({ user }: { user: User }) => {
                 </div>
               )}
             </div>
-            {/* Edit photo modal */}
+            {/* Edit photo modal - supports both photo types */}
             {editingReport && (
               <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm">
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                   className="bg-white rounded-[2.5rem] w-full max-w-md p-8 shadow-2xl">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-xl font-bold text-slate-900">Edit Foto Laporan</h3>
-                    <button onClick={() => setEditingReport(null)} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"><X size={20} /></button>
+                    <button onClick={() => { setEditingReport(null); setEditPhoto(null); }} className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full transition-all"><X size={20} /></button>
                   </div>
-                  <div className="space-y-6">
-                    <label className="flex flex-col items-center p-8 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-400 transition-all">
-                      <Camera size={32} className="text-slate-400 mb-3" />
+                  <div className="space-y-5">
+                    {/* Photo type selector */}
+                    <div>
+                      <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-3">Jenis Foto</p>
+                      <div className="flex gap-3">
+                        <button type="button" onClick={() => setEditPhotoType('cleaning')}
+                          className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all border-2 ${editPhotoType === 'cleaning' ? 'bg-amber-50 border-amber-400 text-amber-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                          Foto Kebersihan
+                        </button>
+                        <button type="button" onClick={() => setEditPhotoType('checkin')}
+                          className={`flex-1 py-3 rounded-2xl text-sm font-bold transition-all border-2 ${editPhotoType === 'checkin' ? 'bg-blue-50 border-blue-400 text-blue-700' : 'bg-slate-50 border-slate-200 text-slate-500'}`}>
+                          Foto Kehadiran
+                        </button>
+                      </div>
+                    </div>
+                    <label className="flex flex-col items-center p-6 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 cursor-pointer hover:border-blue-400 transition-all">
+                      <Camera size={28} className="text-slate-400 mb-2" />
                       <span className="text-sm font-bold text-slate-600">{editPhoto ? editPhoto.name : 'Pilih foto baru'}</span>
                       <input type="file" accept="image/*" capture="environment" className="hidden" onChange={(e) => setEditPhoto(e.target.files?.[0] || null)} />
                     </label>
+                    {editPhoto && (
+                      <div className="rounded-2xl overflow-hidden aspect-video">
+                        <img src={URL.createObjectURL(editPhoto)} alt="Preview" className="w-full h-full object-cover" />
+                      </div>
+                    )}
                     <div className="flex gap-3">
-                      <button onClick={() => setEditingReport(null)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl">Batal</button>
+                      <button onClick={() => { setEditingReport(null); setEditPhoto(null); }} className="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-2xl">Batal</button>
                       <button onClick={handleEditPhoto} disabled={!editPhoto || editSubmitting}
                         className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all disabled:opacity-50">
-                        {editSubmitting ? 'Menyimpan...' : 'Simpan'}
+                        {editSubmitting ? 'Menyimpan...' : 'Simpan Foto'}
                       </button>
                     </div>
                   </div>
@@ -1132,6 +1724,8 @@ const AdminDashboard = ({ user }: { user: User }) => {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [newSchedule, setNewSchedule] = useState({ group_name: '', day: 'Senin' });
   const [editingSchedule, setEditingSchedule] = useState<Schedule | null>(null);
+  const [showShuffle, setShowShuffle] = useState(false);
+  const [showCopyPaste, setShowCopyPaste] = useState(false);
 
   useEffect(() => { fetchData(); }, []);
 
@@ -1298,6 +1892,8 @@ const AdminDashboard = ({ user }: { user: User }) => {
   return (
     <div className="max-w-6xl mx-auto p-4 space-y-6">
       {previewImage && <ImagePreviewModal src={previewImage} onClose={() => setPreviewImage(null)} />}
+      {showShuffle && <ShuffleModal onClose={() => setShowShuffle(false)} onDone={fetchData} />}
+      {showCopyPaste && <ScheduleCopyPaste schedules={schedules} users={users} onClose={() => setShowCopyPaste(false)} onImported={fetchData} />}
 
       {/* Generated Code Modal */}
       {generatedCode && (
@@ -1324,19 +1920,24 @@ const AdminDashboard = ({ user }: { user: User }) => {
       )}
 
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Panel Administrasi 🛠️</h2>
-          <p className="text-slate-500 font-medium mt-1 text-sm">Kelola data laporan, anggota, dan jadwal piket.</p>
+        <div className="flex items-center justify-between md:block">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">Panel Administrasi 🛠️</h2>
+            <p className="text-slate-500 font-medium mt-1 text-sm">Kelola data laporan, anggota, dan jadwal piket.</p>
+          </div>
         </div>
-        {/* Tab navigation - scrollable on mobile */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl overflow-x-auto scrollbar-hide gap-0.5 flex-shrink-0">
-          {tabs.map(tab => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
-              className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-shrink-0 ${activeTab === tab.id ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
-              <tab.icon size={16} />
-              <span className="hidden sm:inline">{tab.label}</span>
-            </button>
-          ))}
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Tab navigation */}
+          <div className="flex bg-slate-100 p-1.5 rounded-2xl overflow-x-auto scrollbar-hide gap-0.5 flex-shrink-0">
+            {tabs.map(tab => (
+              <button key={tab.id} onClick={() => setActiveTab(tab.id as any)}
+                className={`flex items-center gap-2 px-4 sm:px-5 py-2 rounded-xl text-sm font-bold transition-all whitespace-nowrap flex-shrink-0 ${activeTab === tab.id ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}>
+                <tab.icon size={16} />
+                <span className="hidden sm:inline">{tab.label}</span>
+              </button>
+            ))}
+          </div>
+
         </div>
       </header>
 
@@ -1572,12 +2173,22 @@ const AdminDashboard = ({ user }: { user: User }) => {
                 <h3 className="text-xl font-bold text-slate-900">Jadwal Piket Mingguan</h3>
                 <p className="text-sm text-slate-500 font-medium mt-1">Satu PJ per hari, Senin–Jumat</p>
               </div>
-              {availableDaysForSchedule.length > 0 && (
-                <button onClick={() => { setEditingSchedule(null); setNewSchedule({ group_name: '', day: availableDaysForSchedule[0] }); setShowScheduleForm(!showScheduleForm); }}
-                  className="btn-primary px-4 py-2.5 flex items-center gap-2 text-sm">
-                  <Plus size={16} />Tambah Jadwal
+              <div className="flex items-center gap-2 flex-wrap">
+                <button onClick={() => setShowShuffle(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-purple-50 text-purple-600 border border-purple-100 hover:bg-purple-100 rounded-2xl text-sm font-bold transition-all">
+                  <Shuffle size={16} />Acak Anggota
                 </button>
-              )}
+                <button onClick={() => setShowCopyPaste(true)}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-600 hover:bg-slate-200 rounded-2xl text-sm font-bold transition-all">
+                  <Copy size={16} /><span className="hidden sm:inline">Salin/Tempel</span><span className="sm:hidden">Jadwal</span>
+                </button>
+                {availableDaysForSchedule.length > 0 && (
+                  <button onClick={() => { setEditingSchedule(null); setNewSchedule({ group_name: '', day: availableDaysForSchedule[0] }); setShowScheduleForm(!showScheduleForm); }}
+                    className="btn-primary px-4 py-2.5 flex items-center gap-2 text-sm">
+                    <Plus size={16} />Tambah Jadwal
+                  </button>
+                )}
+              </div>
             </div>
 
             <AnimatePresence>
@@ -1823,6 +2434,7 @@ export default function App() {
   const [adminExists, setAdminExists] = useState<boolean | null>(null);
   const [activeTestPage, setActiveTestPage] = useState(false);
   const [settings, setSettings] = useState<any>({});
+  const [showAboutGlobal, setShowAboutGlobal] = useState(false);
 
   useEffect(() => {
     safeFetch('/api/admin-exists').then(d => setAdminExists(d.exists)).catch(() => setAdminExists(false));
@@ -1860,6 +2472,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 pb-12">
+      {showAboutGlobal && <AboutModal onClose={() => setShowAboutGlobal(false)} />}
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 sm:px-6 py-4 sticky top-0 z-50">
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
@@ -1882,6 +2495,9 @@ export default function App() {
               <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest">{user.role}</span>
             </div>
             <div className="w-px h-7 bg-slate-200 hidden sm:block" />
+            <button onClick={() => setShowAboutGlobal(true)} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all" title="Tentang Aplikasi">
+              <BookOpen size={18} />
+            </button>
             <button onClick={handleLogout} className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-all" title="Keluar">
               <LogOut size={18} />
             </button>
