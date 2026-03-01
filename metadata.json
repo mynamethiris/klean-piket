@@ -1,0 +1,5 @@
+{
+  "name": "Sistem Piket Kelas",
+  "description": "Aplikasi manajemen piket kelas dengan fitur absensi berbasis lokasi, laporan kebersihan, dan panel administrasi.",
+  "requestFramePermissions": ["camera", "geolocation"]
+}
